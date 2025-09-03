@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organize Your Day</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f4f4f9;
+            color: #333;
+            transition: background 0.5s, color 0.5s;
+        }
+
+        .dark {
+            background: #1e1e1e;
+            color: #eee;
+        }
+
+        .page {
+            display: none;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .active {
+            display: block;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .question {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s ease;
+            margin: 15px 0;
+        }
+
+        .question.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        input,
+        select {
+            display: block;
+            margin: 10px auto;
+            padding: 8px;
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: #2563eb;
+            color: #fff;
+            cursor: pointer;
+            font-size: 16px;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-row {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .task {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+        }
+
+        .task.upcoming {
+            background-color: #fceb98;
+        }
+        
+        .dark .task.upcoming {
+            background-color: #a16207;
+        }
+
+        .task.completed {
+            background-color: #92e692;
+        }
+        
+        .dark .task.completed {
+            background-color: #166534;
+        }
+        
+        .task.passed {
+            background-color: #ffa4a4;
+        }
+        
+        .dark .task.passed {
+            background-color: #b91c1c;
+        }
+
+        .task.ongoing {
+            background-color: #93c5fd;
+        }
+        .dark .task.ongoing {
+            background-color: #1d4ed8;
+        }
+
+        .task:hover {
+            transform: translateX(5px);
+        }
+
+        .status {
+            padding: 5px 10px;
+            border-radius: 6px;
+            display: inline-block;
+            font-weight: bold;
+        }
+
+        .status.upcoming {
+            background: #f59e0b;
+        }
+
+        .status.completed {
+            background: #22c55e;
+        }
+
+        .status.passed {
+            background: #ef4444;
+        }
+
+        .status.ongoing {
+            background: #3b82f6;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .task-actions button {
+            margin: 0;
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        
+        .complete-btn {
+            background-color: #2563eb;
+        }
+
+        .delete-btn {
+            background-color: #dc2626;
+        }
+
+        .progress {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: conic-gradient(#2563eb 0%, #e5e7eb 0%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            margin: 20px auto;
+        }
+
+        .progress .score-text {
+            position: absolute;
+            text-align: center;
+        }
+
+        .task-form {
+            text-align: center;
+            margin: 20px auto;
+            padding: 15px;
+            background: #fff;
+            border-radius: 12px;
+            max-width: 400px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .task-form input,
+        .task-form select {
+            margin: 5px 0;
+            max-width: 100%;
+        }
+
+        .dark .task-form {
+            background: #2c2c2c;
+        }
+
+        .quiz-container {
+            display: block;
+        }
+
+        .quiz-question {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .dark .quiz-question {
+            background: #2c2c2c;
+        }
+
+        .result {
+            text-align: center;
+            font-size: 20px;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        .history-item {
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .countdown-container {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .countdown-text {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 300px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+        }
+
+        .dark .modal-content {
+            background-color: #2c2c2c;
+        }
+
+        .modal-content p {
+            margin: 0;
+            padding-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Custom Modal -->
+    <div id="customModal" class="modal">
+        <div class="modal-content">
+            <p id="modalMessage"></p>
+            <button onclick="hideMessage()">OK</button>
+        </div>
+    </div>
+
+    <div id="questionsPage" class="page active">
+        <h1>Answer a few questions</h1>
+        <div class="question">Your Name: <input type="text" id="q1"></div>
+        <div class="question">Your Age: <input type="number" id="q2"></div>
+        <div class="question">Why do you want to organize your day? <input type="text" id="q3"></div>
+        <div class="question">Your main focus?
+            <select id="q4">
+                <option>Work</option>
+                <option>Study</option>
+                <option>Health</option>
+                <option>Other</option>
+            </select>
+        </div>
+        <div class="question">How organized are you?
+            <select id="q5">
+                <option>Very</option>
+                <option>Somewhat</option>
+                <option>Not at all</option>
+            </select>
+        </div>
+        <div class="question">Preferred time?
+            <select id="q6">
+                <option>Morning</option>
+                <option>Afternoon</option>
+                <option>Night</option>
+                <option>Flexible</option>
+            </select>
+        </div>
+        <div class="btn-row">
+            <button onclick="goToTasks()">Next</button>
+        </div>
+    </div>
+
+    <div id="tasksPage" class="page">
+        <h1>Your Tasks</h1>
+        <div class="progress" id="progressCircle">0%</div>
+
+        <div class="task-form">
+            <input type="text" id="taskName" placeholder="Task name">
+            <label for="startTime">Start Time:</label>
+            <input type="time" id="startTime">
+            <label for="endTime">End Time:</label>
+            <input type="time" id="endTime">
+            <button onclick="addTask()">Add Task</button>
+        </div>
+
+        <div class="btn-row">
+            <button onclick="resetDay()">Reset Day</button>
+            <button onclick="enableNotif()">Enable Notifications</button>
+            <button onclick="toggleDark()">Dark Mode</button>
+            <button onclick="goToQuiz()">Go To Quiz</button>
+        </div>
+
+        <div id="taskList"></div>
+    </div>
+
+    <div id="quizPage" class="page">
+        <h1>Quick Quiz</h1>
+        
+        <div class="quiz-container" id="quizContainer">
+            <div class="quiz-question">
+                <p>1. What is the best time to be productive?</p>
+                <label><input type="radio" name="qz1" value="Morning"> Morning</label><br>
+                <label><input type="radio" name="qz1" value="Night"> Night</label><br>
+                <label><input type="radio" name="qz1" value="Anytime"> Anytime</label>
+            </div>
+            <div class="quiz-question">
+                <p>2. Which of these helps in organizing your day?</p>
+                <label><input type="radio" name="qz2" value="Planning"> Planning</label><br>
+                <label><input type="radio" name="qz2" value="Doing nothing"> Doing nothing</label><br>
+                <label><input type="radio" name="qz2" value="Guessing"> Guessing</label>
+            </div>
+            <div class="quiz-question">
+                <p>3. What should you do after finishing all your tasks?</p>
+                <label><input type="radio" name="qz3" value="Celebrate"> Celebrate 🎉</label><br>
+                <label><input type="radio" name="qz3" value="Start new tasks"> Start new tasks</label><br>
+                <label><input type="radio" name="qz3" value="Forget about it"> Forget about it</label>
+            </div>
+            <div class="btn-row">
+                <button onclick="submitQuiz()">Submit Quiz</button>
+                <button onclick="goToHistory()">Go To History</button>
+            </div>
+        </div>
+
+        <div id="countdownContainer" class="countdown-container">
+            <p class="countdown-text">New quiz available in:</p>
+            <div id="countdownTimer">00:00</div>
+            <div class="btn-row">
+                <button onclick="goToHistory()">Quiz History</button>
+                <button onclick="goToTasks()">Back to Tasks</button>
+            </div>
+        </div>
+
+        <div class="progress" id="quizScoreCircle">
+            <span class="score-text" id="quizScoreText">0/3</span>
+        </div>
+    </div>
+
+    <div id="historyPage" class="page">
+        <h1>Quiz History</h1>
+        <div id="historyList"></div>
+        <div class="btn-row">
+            <button onclick="clearHistory()">Clear History</button>
+            <button onclick="goToTasks()">Back to Tasks</button>
+            <button onclick="goToQuiz()">Back to Quiz</button>
+        </div>
+    </div>
+
+    <script>
+        // Custom Modal Functions
+        function showMessage(message) {
+            document.getElementById('modalMessage').innerText = message;
+            document.getElementById('customModal').style.display = 'block';
+        }
+
+        function hideMessage() {
+            document.getElementById('customModal').style.display = 'none';
+        }
+        
+        // Page Navigation
+        window.onload = () => {
+            document.querySelectorAll('.question').forEach((q, i) => {
+                setTimeout(() => q.classList.add('visible'), i * 400);
+            });
+            checkCountdown();
+            setInterval(updateAllTaskStatuses, 10000); 
+        };
+
+        function goToTasks() {
+            document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+            document.getElementById("tasksPage").classList.add("active");
+        }
+
+        function goToQuiz() {
+            document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+            document.getElementById("quizPage").classList.add("active");
+            checkCountdown();
+        }
+
+        function goToHistory() {
+            document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+            document.getElementById("historyPage").classList.add("active");
+            loadHistory();
+        }
+
+        // Task Management
+        function addTask() {
+            const name = document.getElementById("taskName").value || "New Task";
+            const startTime = document.getElementById("startTime").value;
+            const endTime = document.getElementById("endTime").value;
+
+            if (!startTime || !endTime) {
+                showMessage("Please select a start and end time.");
+                return;
+            }
+
+            const taskList = document.getElementById("taskList");
+            const div = document.createElement("div");
+            div.className = "task";
+            div.setAttribute('data-name', name);
+            div.setAttribute('data-start-time', startTime);
+            div.setAttribute('data-end-time', endTime);
+            div.innerHTML = `
+                <div class="task-content">
+                    <h3>${name}</h3>
+                    <p>Start: ${startTime}<br>End: ${endTime}</p>
+                </div>
+                <div class="task-actions">
+                    <span class="status upcoming">Upcoming</span>
+                    <button class="complete-btn" onclick="completeTask(this)">Complete Task</button>
+                    <button class="delete-btn" onclick="deleteTask(this)">Delete Task</button>
+                </div>`;
+            
+            taskList.appendChild(div);
+            sortTasks();
+            updateAllTaskStatuses();
+
+            document.getElementById("taskName").value = "";
+            document.getElementById("startTime").value = "";
+            document.getElementById("endTime").value = "";
+
+            updateProgress();
+        }
+
+        function sortTasks() {
+            const taskList = document.getElementById("taskList");
+            const tasks = Array.from(taskList.children);
+
+            tasks.sort((a, b) => {
+                const startTimeA = a.getAttribute('data-start-time');
+                const startTimeB = b.getAttribute('data-start-time');
+                return startTimeA.localeCompare(startTimeB);
+            });
+
+            tasks.forEach(task => taskList.appendChild(task));
+        }
+        
+        function updateAllTaskStatuses() {
+            const tasks = document.querySelectorAll(".task");
+            const now = new Date();
+
+            tasks.forEach(task => {
+                const startTime = task.getAttribute('data-start-time');
+                const endTime = task.getAttribute('data-end-time');
+                const [startHour, startMinute] = startTime.split(':').map(Number);
+                const [endHour, endMinute] = endTime.split(':').map(Number);
+
+                const taskStart = new Date();
+                taskStart.setHours(startHour, startMinute, 0, 0);
+
+                const taskEnd = new Date();
+                taskEnd.setHours(endHour, endMinute, 0, 0);
+
+                const statusSpan = task.querySelector('.status');
+
+                if (statusSpan.textContent === "Completed") return;
+
+                if (now < taskStart) {
+                    task.classList.remove("passed", "ongoing");
+                    task.classList.add("upcoming");
+                    statusSpan.className = "status upcoming";
+                    statusSpan.textContent = "Upcoming";
+                } else if (now >= taskStart && now <= taskEnd) {
+                    task.classList.remove("upcoming", "passed");
+                    task.classList.add("ongoing");
+                    statusSpan.className = "status ongoing";
+                    statusSpan.textContent = "Ongoing";
+                } else if (now > taskEnd) {
+                    task.classList.remove("upcoming", "ongoing");
+                    task.classList.add("passed");
+                    statusSpan.className = "status passed";
+                    statusSpan.textContent = "Passed";
+                }
+            });
+        }
+
+        function completeTask(btn) {
+            const taskDiv = btn.closest('.task');
+            const statusSpan = taskDiv.querySelector('.status');
+            const currentStatus = statusSpan.textContent;
+
+            if (currentStatus === "Completed") {
+                showMessage("This task has already been completed.");
+                return;
+            } else if (currentStatus === "Upcoming") {
+                showMessage("This task is upcoming. Please complete it at the designated time.");
+                return;
+            } else if (currentStatus === "Passed") {
+                showMessage("This task has already passed. It cannot be completed now.");
+                return;
+            }
+
+            const startTime = taskDiv.getAttribute('data-start-time');
+            const now = new Date();
+            const [startHour, startMinute] = startTime.split(':').map(Number);
+            const taskStart = new Date();
+            taskStart.setHours(startHour, startMinute, 0, 0);
+
+            if (now < taskStart) {
+                showMessage("You cannot complete a task before it starts.");
+                return;
+            }
+
+            taskDiv.classList.remove("upcoming", "passed", "ongoing");
+            taskDiv.classList.add("completed");
+            statusSpan.className = "status completed";
+            statusSpan.textContent = "Completed";
+            updateProgress();
+        }
+
+        function deleteTask(btn) {
+            const taskDiv = btn.closest('.task');
+            taskDiv.remove();
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const tasks = document.querySelectorAll(".task");
+            const completed = document.querySelectorAll(".task.completed").length;
+            const percent = tasks.length ? Math.round((completed / tasks.length) * 100) : 0;
+
+            document.getElementById("progressCircle").style.background =
+                `conic-gradient(#2563eb ${percent}%, #e5e7eb 0%)`;
+            document.getElementById("progressCircle").textContent = percent + "%";
+        }
+
+        function resetDay() {
+            document.getElementById("taskList").innerHTML = "";
+            updateProgress();
+            showMessage("Day has been reset.");
+        }
+
+        // Notifications
+        function enableNotif() {
+            if (Notification.permission !== "granted") {
+                Notification.requestPermission();
+            }
+        }
+
+        function notify(msg) {
+            if (Notification.permission === "granted") {
+                new Notification(msg);
+            }
+        }
+
+        // Dark Mode
+        function toggleDark() {
+            document.body.classList.toggle("dark");
+        }
+
+        // Quiz Questions
+        const allQuestions = [
+            {
+                question: "What is the best time to be productive?",
+                options: ["Morning", "Night", "Anytime"],
+                answer: "Morning"
+            },
+            {
+                question: "Which of these helps in organizing your day?",
+                options: ["Planning", "Doing nothing", "Guessing"],
+                answer: "Planning"
+            },
+            {
+                question: "What should you do after finishing all your tasks?",
+                options: ["Celebrate 🎉", "Start new tasks", "Forget about it"],
+                answer: "Celebrate 🎉"
+            },
+            {
+                question: "What tool is useful for daily organization?",
+                options: ["Calendar", "Random Notes", "Ignoring tasks"],
+                answer: "Calendar"
+            },
+            {
+                question: "What improves productivity?",
+                options: ["Rest", "Distractions", "Multitasking excessively"],
+                answer: "Rest"
+            },
+            {
+                question: "What’s most important in time management?",
+                options: ["Prioritization", "Avoiding all work", "Guesswork"],
+                answer: "Prioritization"
+            }
+        ];
+
+        let currentQuestions = [];
+
+        function loadNewQuiz() {
+            const container = document.getElementById("quizContainer");
+            container.innerHTML = "";
+            currentQuestions = [];
+
+            const shuffled = allQuestions.sort(() => 0.5 - Math.random()).slice(0, 3);
+            currentQuestions = shuffled;
+
+            shuffled.forEach((q, index) => {
+                const div = document.createElement("div");
+                div.className = "quiz-question";
+                div.innerHTML = `<p>${index + 1}. ${q.question}</p>` +
+                    q.options.map(opt =>
+                        `<label><input type="radio" name="qz${index}" value="${opt}"> ${opt}</label><br>`
+                    ).join("");
+                container.appendChild(div);
+            });
+
+            const btnRow = document.createElement("div");
+            btnRow.className = "btn-row";
+            btnRow.innerHTML = `<button onclick="submitQuiz()">Submit Quiz</button>
+                                <button onclick="goToHistory()">Go To History</button>`;
+            container.appendChild(btnRow);
+        }
+
+        // Quiz Submit
+        function submitQuiz() {
+            let score = 0;
+            currentQuestions.forEach((q, i) => {
+                const selected = document.querySelector(`input[name="qz${i}"]:checked`);
+                if (selected && selected.value === q.answer) {
+                    score++;
+                }
+            });
+
+            updateQuizScore(score);
+
+            const history = JSON.parse(localStorage.getItem("quizHistory")) || [];
+            history.push({ date: new Date().toLocaleString(), score: `${score}/3` });
+            localStorage.setItem("quizHistory", JSON.stringify(history));
+
+            document.getElementById("quizContainer").style.display = "none";
+            document.getElementById("countdownContainer").style.display = "block";
+
+            startCountdown(5 * 60);
+        }
+
+        function updateQuizScore(score) {
+            const percent = (score / 3) * 100;
+            document.getElementById("quizScoreCircle").style.background =
+                `conic-gradient(#2563eb ${percent}%, #e5e7eb 0%)`;
+            document.getElementById("quizScoreText").textContent = `${score}/3`;
+        }
+
+        function loadHistory() {
+            const history = JSON.parse(localStorage.getItem("quizHistory")) || [];
+            const historyList = document.getElementById("historyList");
+            historyList.innerHTML = "";
+
+            history.forEach(h => {
+                const div = document.createElement("div");
+                div.className = "history-item";
+                div.innerHTML = `<span>${h.date}</span><span>${h.score}</span>`;
+                historyList.appendChild(div);
+            });
+        }
+
+        function clearHistory() {
+            localStorage.removeItem("quizHistory");
+            loadHistory();
+        }
+
+        // Countdown
+        let countdownInterval;
+
+        function startCountdown(seconds) {
+            localStorage.setItem("nextQuizTime", Date.now() + seconds * 1000);
+            updateCountdown();
+            countdownInterval = setInterval(updateCountdown, 1000);
+        }
+
+        function updateCountdown() {
+            const countdown = document.getElementById("countdownTimer");
+            const nextQuizTime = localStorage.getItem("nextQuizTime");
+
+            if (!nextQuizTime) return;
+
+            const remaining = Math.floor((nextQuizTime - Date.now()) / 1000);
+
+            if (remaining <= 0) {
+                clearInterval(countdownInterval);
+                document.getElementById("quizContainer").style.display = "block";
+                document.getElementById("countdownContainer").style.display = "none";
+                loadNewQuiz();
+                localStorage.removeItem("nextQuizTime");
+            } else {
+                const minutes = String(Math.floor(remaining / 60)).padStart(2, "0");
+                const seconds = String(remaining % 60).padStart(2, "0");
+                countdown.textContent = `${minutes}:${seconds}`;
+            }
+        }
+
+        function checkCountdown() {
+            const nextQuizTime = localStorage.getItem("nextQuizTime");
+            if (!nextQuizTime) {
+                document.getElementById("quizContainer").style.display = "block";
+                document.getElementById("countdownContainer").style.display = "none";
+                loadNewQuiz();
+            } else {
+                document.getElementById("quizContainer").style.display = "none";
+                document.getElementById("countdownContainer").style.display = "block";
+                updateCountdown();
+                countdownInterval = setInterval(updateCountdown, 1000);
+            }
+        }
+    </script>
+</body>
+</html>
